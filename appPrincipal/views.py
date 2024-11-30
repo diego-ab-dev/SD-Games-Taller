@@ -3,63 +3,119 @@ from .models import Producto ,ItemCarritoProducto, Usuario, Carrito, Venta, Prod
 from appPrincipal import forms
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Avg
+from django.db import IntegrityError
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 import json
 from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
 from django.contrib.messages import get_messages
-from django.urls import reverse
+from .forms import UsuarioForm, ProductoForm
 
 # Create your views here.
 
-def password_reset_request(request):
+# Vistas para administracion
+
+def admin_dashboard(request):
+    return render(request, 'admin_panel/dashboard.html')
+
+def admin_usuarios(request):
+    usuarios = Usuario.objects.all()
+    return render(request, 'admin_panel/usuarios.html', {'usuarios': usuarios})
+
+def admin_productos(request):
+    productos = Producto.objects.all()
+    return render(request, 'admin_panel/productos.html', {'productos': productos})
+
+
+def editar_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, id=usuario_id)
     if request.method == 'POST':
-        form = forms.PasswordResetForm(request.POST)
+        form = UsuarioForm(request.POST, instance=usuario)
         if form.is_valid():
-            email = form.cleaned_data['email']
-            try:
-                usuario = Usuario.objects.get(email=email)
-                token = get_random_string(length=32)
-                usuario.contraseña = make_password(token)
-                usuario.save()
-                send_mail(
-                    subject="Recuperación de contraseña - SD Games",
-                    message=f"Tu nueva contraseña temporal es: {token}",
-                    from_email=settings.EMAIL_HOST_USER,
-                    recipient_list=[email],
-                    fail_silently=False,
-                )
-                messages.success(request, "Se ha enviado una nueva contraseña a tu correo electrónico.")
-                return redirect('login')
-            except Usuario.DoesNotExist:
-                form.add_error('email', "El correo no está registrado.")
+            form.save()
+            return redirect('admin_usuarios')
     else:
-        form = forms.PasswordResetForm()
-    return render(request, 'password_reset.html', {'form': form})
+        form = UsuarioForm(instance=usuario)
+    return render(request, 'admin_panel/editar_usuario.html', {'form': form})
 
-def obtener_ciudades(request):
-    region = request.GET.get('region')
-    ciudades = regiones_ciudades.get(region, [])
-    return JsonResponse({'ciudades': ciudades})
+def editar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_productos')
+    else:
+        form = ProductoForm(instance=producto)
+    return render(request, 'admin_panel/editar_producto.html', {'form': form})
 
+# Fin vistas para administracion
+
+
+# vistas relacionadas a home y menu
+def home(request):
+    usuario_id = request.session.get('usuario_id')
+    usuario = None
+    if usuario_id:
+        try:
+            usuario = Usuario.objects.get(id=usuario_id)
+        except Usuario.DoesNotExist:
+            pass
+    return render(request, 'home.html', {'usuario': usuario})
 
 def productos_menu(request):
-    query=request.GET.get('buscar')
+    query = request.GET.get('buscar')
     if query:
-        productos=Producto.objects.filter(nombre__icontains=query)
-        return render(request, 'resultado_busqueda.html', {'productos': productos, 'query':query})
+        productos = Producto.objects.filter(nombre__icontains=query, stock__gt=0)
+        return render(request, 'resultado_busqueda.html', {'productos': productos, 'query': query})
     else:
-        productos = Producto.objects.all() 
-        productos_recientes = Producto.objects.order_by('-id')[:10] 
+        productos = Producto.objects.filter(stock__gt=0) 
+        productos_recientes = Producto.objects.filter(stock__gt=0).order_by('-id')[:10]
         return render(request, 'productosmenu.html', {
             'productos': productos,
             'productos_recientes': productos_recientes,
         })
     
+def producto_detalle(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    rango_cantidad = range(1, producto.stock + 1)
+
+    promedio_puntuacion = producto.opiniones.aggregate(Avg('puntuacion'))['puntuacion__avg']
+    promedio_puntuacion = round(promedio_puntuacion, 1) if promedio_puntuacion else 0
+
+    opiniones = producto.opiniones.all()
+    opiniones_list = [
+        {
+            "usuario": opinion.usuario.nombre,
+            "comentario": opinion.comentario,
+            "fecha": opinion.fecha_creacion,
+            "estrellas_llenas": range(opinion.puntuacion),  
+            "estrellas_vacias": range(5 - opinion.puntuacion),  
+        }
+        for opinion in opiniones
+    ]
+
+    return render(
+        request,
+        'producto_detalle.html',
+        {
+            'producto': producto,
+            'rango_cantidad': rango_cantidad,
+            'promedio_puntuacion': promedio_puntuacion,
+            'opiniones_list': opiniones_list,  
+        },
+    )
+    
+def vista_carrusel(request):
+    productos = Producto.objects.all()
+    cod6 = Producto.objects.filter(nombre="Call of Duty: Black Ops 6").first() 
+    fc25 = Producto.objects.filter(nombre="Fc 25").first()
+    silent = Producto.objects.filter(nombre="Silent Hill 2").first()    
+    return render(request, 'productosmenu.html', {'productos': productos, 'cod6': cod6, 'fc25': fc25, 'silent':silent})
+
 def productos_por_categoria(request, categoria):
     productos = Producto.objects.filter(categoria=categoria)
     
@@ -84,19 +140,10 @@ def productos_por_categoria(request, categoria):
         'generos': Producto.GENEROS,
     }
     return render(request, 'productos_por_categoria.html', context)
+# fin de vistas relacionadas a home y menu
 
 
-def home(request):
-    usuario_id = request.session.get('usuario_id')
-    usuario = None
-    if usuario_id:
-        try:
-            usuario = Usuario.objects.get(id=usuario_id)
-        except Usuario.DoesNotExist:
-            pass
-    return render(request, 'home.html', {'usuario': usuario})
-
-
+# Vistas relacionadas a los inicios y registros
 def login(request):
     errors = {}  
     if request.method == 'POST':
@@ -121,40 +168,74 @@ def login(request):
 
     return render(request, 'login.html', {'errors': errors})
 
-
-def logout(request):
-    request.session.flush()  
-    return redirect('login')
-    
 def register(request):
-    form = forms.Usuario()
+    form = forms.UsuarioCustomForm()
     if request.method == 'POST':
-        form = forms.Usuario(request.POST)
+        form = forms.UsuarioCustomForm(request.POST)
         region_seleccionada = request.POST.get('region')
         ciudades = regiones_ciudades.get(region_seleccionada, [])
         form.fields['ciudad'].choices = [(ciudad, ciudad) for ciudad in ciudades]
 
         if form.is_valid():
-            registro = Usuario(
-                rut=form.cleaned_data['rut'],
-                nombre=form.cleaned_data['nombre'],
-                telefono=form.cleaned_data['telefono'],
-                email=form.cleaned_data['email'],
-                contraseña=make_password(form.cleaned_data['contraseña']),
-                direccion=form.cleaned_data['direccion'],
-                ciudad=form.cleaned_data['ciudad'],
-                region=form.cleaned_data['region'],
-            )
-            registro.save()
-            return redirect('home')
+            try:
+                registro = Usuario(
+                    rut=form.cleaned_data['rut'],
+                    nombre=form.cleaned_data['nombre'],
+                    telefono=form.cleaned_data['telefono'],
+                    email=form.cleaned_data['email'],
+                    contraseña=make_password(form.cleaned_data['contraseña']),
+                    direccion=form.cleaned_data['direccion'],
+                    ciudad=form.cleaned_data['ciudad'],
+                    region=form.cleaned_data['region'],
+                )
+                registro.save()
+                return JsonResponse({'success': True, 'message': 'Usuario registrado exitosamente.'})
+            except IntegrityError as e:
+                if 'email' in str(e):
+                    return JsonResponse({'success': False, 'message': 'El correo ya está registrado.'})
+                elif 'rut' in str(e):
+                    return JsonResponse({'success': False, 'message': 'El RUT ya está registrado.'})
         else:
             print(form.errors)
-            messages.error(request, "Hubo un error en el formulario.")
     data = {'form': form, 'regiones_ciudades': regiones_ciudades}
     return render(request, 'register.html', data)
 
+def logout(request):
+    request.session.flush()  
+    return redirect('login')
+
+def password_reset_request(request):
+    if request.method == 'POST':
+        form = forms.PasswordResetForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                usuario = Usuario.objects.get(email=email)
+                token = get_random_string(length=32)
+                usuario.contraseña = make_password(token)
+                usuario.save()
+                send_mail(
+                    subject="Recuperación de contraseña - SD Games",
+                    message=f"Tu nueva contraseña temporal es: {token}",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                return redirect('login')
+            except Usuario.DoesNotExist:
+                form.add_error('email', "El correo no está registrado.")
+    else:
+        form = forms.PasswordResetForm()
+    return render(request, 'password_reset.html', {'form': form, 'mensaje_exito': "Se ha enviado una nueva contraseña a tu correo electrónico."})
+
+def obtener_ciudades(request):
+    region = request.GET.get('region')
+    ciudades = regiones_ciudades.get(region, [])
+    return JsonResponse({'ciudades': ciudades})
+# Fin de Vistas relacionadas a los inicios y registros
 
 
+# vistas sobre el perfil del usuario
 def perfil(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
@@ -185,7 +266,6 @@ def lista_opiniones(request):
 def ver_compras(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        messages.error(request, "Debes iniciar sesión para ver tus compras.")
         return redirect('login')
     
     usuario = get_object_or_404(Usuario, id=usuario_id)
@@ -195,12 +275,9 @@ def ver_compras(request):
 
     return render(request, 'ver_compras.html', {'usuario': usuario, 'compras': compras})
 
-
-
 def crear_reclamo(request, compra_id):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        messages.error(request, "Debes iniciar sesión para agregar un reclamo.")
         return redirect('login')
 
     usuario = get_object_or_404(Usuario, id=usuario_id)
@@ -211,11 +288,11 @@ def crear_reclamo(request, compra_id):
         descripcion = request.POST.get('descripcion', '').strip()
 
         if not asunto or not descripcion:
-            messages.error(request, "Todos los campos son obligatorios.")
+            return render(request, 'crear_reclamo.html', {'compra': compra, 'error': "Todos los campos son obligatorios."})
         else:
             Reclamo.objects.create(usuario=usuario, asunto=asunto, descripcion=descripcion)
-            messages.success(request, "Reclamo creado con éxito.")
             return redirect('ver_compras')
+
 
     return render(request, 'crear_reclamo.html', {
         'compra': compra
@@ -224,7 +301,6 @@ def crear_reclamo(request, compra_id):
 def lista_reclamos(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        messages.error(request, "Debes iniciar sesión para acceder a tus reclamos.")
         return redirect('login')
 
     usuario = get_object_or_404(Usuario, id=usuario_id)
@@ -234,44 +310,45 @@ def lista_reclamos(request):
         'todos_reclamos': todos_reclamos,
     })
 
-
-
-
 def cambiar_contraseña(request):
+    errores = []
     if request.method == 'POST':
         contraseña_actual = request.POST.get('contraseña_actual')
         nueva_contraseña = request.POST.get('nueva_contraseña')
         confirmar_contraseña = request.POST.get('confirmar_contraseña')
         usuario_id = request.session.get('usuario_id')
+
         if usuario_id:
             try:
                 usuario = Usuario.objects.get(id=usuario_id)
                 if not check_password(contraseña_actual, usuario.contraseña):
-                    messages.error(request, "La contraseña actual no es correcta.")
+                    errores.append("La contraseña actual no es correcta.")
                 elif nueva_contraseña != confirmar_contraseña:
-                    messages.error(request, "Las contraseñas no coinciden. Inténtelo nuevamente.")
+                    errores.append("Las contraseñas no coinciden. Inténtelo nuevamente.")
                 else:
                     usuario.contraseña = make_password(nueva_contraseña)
                     usuario.save()
-                    messages.success(request, "Contraseña actualizada exitosamente.")
                     return redirect('perfil')
             except Usuario.DoesNotExist:
-                messages.error(request, "Usuario no encontrado. Inténtelo más tarde.")
+                errores.append("Usuario no encontrado. Inténtelo más tarde.")
         else:
-            messages.error(request, "Debes iniciar sesión para cambiar tu contraseña.")
+            errores.append("Debes iniciar sesión para cambiar tu contraseña.")
 
     storage = get_messages(request)
     mensajes = [{'tipo': message.tags, 'texto': message.message} for message in storage]
 
-    return render(request, 'cambiar_contrausu.html', {'mensajes_json': json.dumps(mensajes)})
+    contexto = {
+        'mensajes_json': json.dumps(mensajes),
+        'errores': errores,
+    }
 
+    return render(request, 'cambiar_contrausu.html', contexto)
 
 @csrf_exempt
 def editar_perfil(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        messages.error(request, "Debes iniciar sesión para acceder a la edición de perfil.")
-        return redirect('login')
+        return JsonResponse({'error': "Debes iniciar sesión para acceder a la edición de perfil."}, status=403)
 
     usuario = get_object_or_404(Usuario, id=usuario_id)
 
@@ -300,50 +377,34 @@ def editar_perfil(request):
     }
     return render(request, 'editar_datos.html', context)
 
-def producto_detalle(request, producto_id):
-    producto = get_object_or_404(Producto, id=producto_id)
-    rango_cantidad = range(1, producto.stock + 1)
+regiones_ciudades = {
+    'ARICA Y PARINACOTA': ['Arica', 'Putre'],
+    'TARAPACA': ['Iquique', 'Alto Hospicio'],
+    'ANTOFAGASTA': ['Antofagasta', 'Calama', 'Tocopilla'],
+    'ATACAMA': ['Copiapó', 'Vallenar', 'Chañaral'],
+    'COQUIMBO': ['La Serena', 'Coquimbo', 'Ovalle'],
+    'VALPARAISO': ['Valparaíso', 'Viña del Mar', 'Quillota', 'San Antonio'],
+    'METROPOLITANA': ['Santiago', 'Puente Alto', 'Maipú', 'La Florida'],
+    'OHIGGINS': ['Rancagua', 'San Fernando', 'Pichilemu'],
+    'MAULE': ['Talca', 'Curicó', 'Linares'],
+    'ÑUBLE': ['Chillán', 'San Carlos'],
+    'BIOBIO': ['Concepción', 'Los Ángeles', 'Coronel'],
+    'ARAUCANIA': ['Temuco', 'Villarrica', 'Angol'],
+    'LOS RIOS': ['Valdivia', 'La Unión'],
+    'LOS LAGOS': ['Puerto Montt', 'Osorno', 'Castro'],
+    'AYSEN': ['Coyhaique', 'Puerto Aysén'],
+    'MAGALLANES': ['Punta Arenas', 'Puerto Natales'],
+}
+# fin de vistas sobre el perfil del usuario
 
-    promedio_puntuacion = producto.opiniones.aggregate(Avg('puntuacion'))['puntuacion__avg']
-    promedio_puntuacion = round(promedio_puntuacion, 1) if promedio_puntuacion else 0
 
-    opiniones = producto.opiniones.all()
-    opiniones_list = [
-        {
-            "usuario": opinion.usuario.nombre,
-            "comentario": opinion.comentario,
-            "fecha": opinion.fecha_creacion,
-            "estrellas_llenas": range(opinion.puntuacion),  
-            "estrellas_vacias": range(5 - opinion.puntuacion),  
-        }
-        for opinion in opiniones
-    ]
-
-    return render(
-        request,
-        'producto_detalle.html',
-        {
-            'producto': producto,
-            'rango_cantidad': rango_cantidad,
-            'promedio_puntuacion': promedio_puntuacion,
-            'opiniones_list': opiniones_list,  
-        },
-    )
-
+# vistas relacionadas con carrito:
 def usuario_compro_producto(usuario, producto):
     return ItemCarritoProducto.objects.filter(
         carrito__venta__isnull=False,  
         carrito__usuario=usuario,
         producto=producto
     ).exists()
-
-
-def vista_carrusel(request):
-    productos = Producto.objects.all()
-    cod6 = Producto.objects.filter(nombre="Call of Duty: Black Ops 6").first() 
-    fc25 = Producto.objects.filter(nombre="Fc 25").first()
-    silent = Producto.objects.filter(nombre="Silent Hill 2").first()    
-    return render(request, 'productosmenu.html', {'productos': productos, 'cod6': cod6, 'fc25': fc25, 'silent':silent})
 
 def agregar_al_carrito(request, producto_id):
     usuario_id = request.session.get('usuario_id')
@@ -366,14 +427,10 @@ def agregar_al_carrito(request, producto_id):
         if cantidad <= producto.stock:
             item_carrito.cantidad = cantidad
             item_carrito.save()
-        else:
-            messages.error(request, f"Solo hay {producto.stock} unidades disponibles de {producto.nombre}.")
     else:
         if item_carrito.cantidad + cantidad <= producto.stock:
             item_carrito.cantidad += cantidad
             item_carrito.save()
-        else:
-            messages.error(request, f"Solo hay {producto.stock} unidades disponibles de {producto.nombre}.")
 
     return redirect('ver_carrito')
 
@@ -449,10 +506,13 @@ def ver_carrito(request):
 def carrito(request):
     return render(request, 'carrito.html')
 
+# fin de vistas relacionadas con carrito:
+
+
+# vistas de los favoritos
 def lista_favoritos(request):
     usuario_id = request.session.get('usuario_id')
     if not usuario_id:
-        messages.error(request, "Debes iniciar sesión para acceder al perfil.")
         return redirect('login')
 
     usuario = get_object_or_404(Usuario, id=usuario_id)
@@ -470,11 +530,6 @@ def agregar_favorito(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
     favorito, created = Favorito.objects.get_or_create(usuario=usuario, producto=producto)
 
-    if created:
-        messages.success(request, f"El producto {producto.nombre} ha sido agregado a tus favoritos.")
-    else:
-        messages.info(request, f"El producto {producto.nombre} ya está en tus favoritos.")
-
     return redirect('lista_favorito')
 
 @require_http_methods(["DELETE"])
@@ -482,12 +537,10 @@ def eliminar_favorito(request, item_id):
     favorito = get_object_or_404(Favorito, id=item_id)
     favorito.delete()
     return JsonResponse({'message': 'Artículo eliminado correctamente'}, status=200)
+# fin de las vistas de los favoritos
 
 
-
-
-
-
+# vistas relacionadas con pago y envio
 def seleccionar_envio(request, usuario_id):
     usuario = get_object_or_404(Usuario, id=usuario_id)
     carrito = usuario.carritos.last() 
@@ -505,13 +558,11 @@ def seleccionar_envio(request, usuario_id):
 
     return render(request, 'seleccionar_envio.html', {'usuario': usuario, 'carrito': carrito})
 
-
 def seleccionar_pago(request, usuario_id):
     usuario = get_object_or_404(Usuario, id=usuario_id)
     carrito = usuario.carritos.last()
 
     if not carrito or not carrito.items.exists():
-        messages.error(request, "No hay productos en tu carrito.")
         return redirect('ver_carrito')
 
     subtotal = sum(item.cantidad * item.producto.precio for item in carrito.items.all())
@@ -524,12 +575,11 @@ def seleccionar_pago(request, usuario_id):
     total = subtotal + costo_envio
 
     if request.method == 'POST':
-        metodo_pago = request.POST.get('metodo_pago', 'tarjeta')
+        metodo_pago = request.POST.get('metodo_pago')
 
-        if metodo_pago == "tarjeta":
+        if metodo_pago in ["tarjeta", "transferencia"]:
             return redirect('compra_exitosa', usuario_id=usuario_id)
-
-        messages.error(request, "Método de pago no válido.")
+        
         return redirect('seleccionar_pago', usuario_id=usuario_id)
 
     return render(request, 'seleccionar_pago.html', {
@@ -538,17 +588,11 @@ def seleccionar_pago(request, usuario_id):
     })
 
 
-
-
-
-
-
 def compra_exitosa(request, usuario_id):
     usuario = get_object_or_404(Usuario, id=usuario_id)
     carrito = usuario.carritos.last()
 
     if not carrito or not carrito.items.exists():
-        messages.error(request, "No hay productos en tu carrito.")
         return redirect('ver_carrito')
 
     metodo_envio = request.session.get('metodo_envio', 'tienda')
@@ -577,25 +621,4 @@ def compra_exitosa(request, usuario_id):
         'venta': venta,
         'metodo_pago': metodo_pago,
     })
-
-
-
-
-regiones_ciudades = {
-    'ARICA Y PARINACOTA': ['Arica', 'Putre'],
-    'TARAPACA': ['Iquique', 'Alto Hospicio'],
-    'ANTOFAGASTA': ['Antofagasta', 'Calama', 'Tocopilla'],
-    'ATACAMA': ['Copiapó', 'Vallenar', 'Chañaral'],
-    'COQUIMBO': ['La Serena', 'Coquimbo', 'Ovalle'],
-    'VALPARAISO': ['Valparaíso', 'Viña del Mar', 'Quillota', 'San Antonio'],
-    'METROPOLITANA': ['Santiago', 'Puente Alto', 'Maipú', 'La Florida'],
-    'OHIGGINS': ['Rancagua', 'San Fernando', 'Pichilemu'],
-    'MAULE': ['Talca', 'Curicó', 'Linares'],
-    'ÑUBLE': ['Chillán', 'San Carlos'],
-    'BIOBIO': ['Concepción', 'Los Ángeles', 'Coronel'],
-    'ARAUCANIA': ['Temuco', 'Villarrica', 'Angol'],
-    'LOS RIOS': ['Valdivia', 'La Unión'],
-    'LOS LAGOS': ['Puerto Montt', 'Osorno', 'Castro'],
-    'AYSEN': ['Coyhaique', 'Puerto Aysén'],
-    'MAGALLANES': ['Punta Arenas', 'Puerto Natales'],
-}
+# fin de vistas relacionadas con pago y envio

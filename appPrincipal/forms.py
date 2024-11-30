@@ -1,8 +1,8 @@
 from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
-import re
-from .models import Opinion
+from .models import Usuario, Producto
+
 
 regiones_ciudades = {
     'ARICA Y PARINACOTA': ['Arica', 'Putre'],
@@ -23,7 +23,7 @@ regiones_ciudades = {
     'MAGALLANES': ['Punta Arenas', 'Puerto Natales'],
 }
 
-class Usuario(forms.Form):
+class UsuarioCustomForm(forms.Form):
 
 
     def validar_rut(rut):
@@ -98,3 +98,14 @@ class PasswordResetForm(forms.Form):
     }))
 
 
+# administracion
+
+class UsuarioForm(forms.ModelForm):
+    class Meta:
+        model = Usuario
+        fields = ['nombre', 'email', 'telefono', 'direccion', 'region', 'ciudad']
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['nombre', 'precio', 'stock', 'descripcion', 'categoria', 'genero']
