@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Producto</title>
+    <title>Document</title>
 </head>
 <body>
-    <h1>Editar Producto</h1>
+    <h1>Agregar Producto</h1>
 
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Guardar Cambios</button>
+    <button type="submit">Guardar Producto</button>
     <a href="{% url 'admin_productos' %}">Cancelar</a>
 </form>
 

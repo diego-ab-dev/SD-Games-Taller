@@ -18,7 +18,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
-from appPrincipal.views import home, login, register, productos_menu, producto_detalle, carrito, vista_carrusel, logout, productos_por_categoria, perfil, editar_perfil, obtener_ciudades, cambiar_contraseña,  agregar_al_carrito, eliminar_del_carrito, actualizar_cantidad_carrito, ver_carrito, lista_favoritos, agregar_favorito, eliminar_favorito, password_reset_request, ver_compras, lista_opiniones, crear_reclamo, lista_reclamos, seleccionar_envio, seleccionar_pago, compra_exitosa, admin_dashboard, admin_productos, admin_usuarios, editar_producto, editar_usuario
+from appPrincipal.views import home, login, register, productos_menu, producto_detalle, carrito, vista_carrusel, logout, productos_por_categoria, perfil, editar_perfil, obtener_ciudades, cambiar_contraseña,  agregar_al_carrito, eliminar_del_carrito, actualizar_cantidad_carrito, ver_carrito, lista_favoritos, agregar_favorito, eliminar_favorito, password_reset_request, ver_compras, lista_opiniones, crear_reclamo, lista_reclamos, seleccionar_envio, seleccionar_pago, compra_exitosa, admin_dashboard, admin_productos, admin_usuarios, editar_producto, editar_usuario, agregar_producto, buscar_productos, buscar_usuarios, eliminar_producto, eliminar_usuario, admin_opiniones, admin_reclamos, responder_reclamo, admin_ventas 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -54,9 +54,18 @@ urlpatterns = [
     path('compra-exitosa/<int:usuario_id>/', compra_exitosa, name='compra_exitosa'),
     path('admin-panel/', admin_dashboard, name='admin_dashboard'),
     path('admin-panel/usuarios/', admin_usuarios, name='admin_usuarios'),
-    path('admin-panel/productos/',admin_productos, name='admin_productos'),
-    path('editar-productos/', editar_producto, name='editar_productos'),
-    path('editar-usuarios/', editar_usuario, name='editar_usuarios'),
+    path('admin-panel/usuarios/buscar/', buscar_usuarios, name='buscar_usuarios'),
+    path('admin-panel/usuarios/eliminar/<int:usuario_id>/',eliminar_usuario, name='eliminar_usuario'),
+    path('admin-panel/usuarios/editar/<int:usuario_id>/', editar_usuario, name='editar_usuario'),
+    path('admin-panel/productos/', admin_productos, name='admin_productos'),
+    path('admin-panel/productos/buscar/', buscar_productos, name='buscar_productos'),
+    path('admin-panel/productos/agregar/', agregar_producto, name='agregar_producto'),
+    path('admin-panel/productos/eliminar/<int:producto_id>/', eliminar_producto, name='eliminar_producto'),
+    path('admin-panel/productos/editar/<int:producto_id>/', editar_producto, name='editar_producto'),
+    path('admin-panel/opiniones/', admin_opiniones, name='admin_opiniones'),
+    path('admin-panel/reclamos/', admin_reclamos, name='admin_reclamos'),
+    path('admin-panel/reclamos/responder/<int:reclamo_id>/', responder_reclamo, name='responder_reclamo'),
+    path('admin-panel/ventas/', admin_ventas, name='admin_ventas'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) 
 
 # esto es para editar titulos en el panel de administracion

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reclamos</title>
+</head>
+<body>
+    <h1>Reclamos</h1>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Asunto</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for reclamo in reclamos %}
+        <tr>
+            <td>{{ reclamo.id }}</td>
+            <td>{{ reclamo.usuario.nombre }}</td>
+            <td>{{ reclamo.asunto }}</td>
+            <td>{{ reclamo.estado }}</td>
+            <td>{{ reclamo.fecha|date:"d M Y" }}</td>
+            <td>
+                <a href="{% url 'responder_reclamo' reclamo.id %}">Responder</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

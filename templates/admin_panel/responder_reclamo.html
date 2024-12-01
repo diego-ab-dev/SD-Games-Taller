@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responder Reclamo</title>
+</head>
+<body>
+    <h1>Responder Reclamo</h1>
+<form method="post">
+    {% csrf_token %}
+    <p><strong>Asunto:</strong> {{ reclamo.asunto }}</p>
+    <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
+    <textarea name="respuesta" placeholder="Escribe tu respuesta aquí...">{{ reclamo.respuesta }}</textarea>
+    <button type="submit">Enviar Respuesta</button>
+</form>
+<a href="{% url 'admin_reclamos' %}">Volver</a>
+
+</body>
+</html>

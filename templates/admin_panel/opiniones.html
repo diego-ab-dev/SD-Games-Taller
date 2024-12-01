@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opiniones</title>
+</head>
+<body>
+    <h1>Opiniones</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Usuario</th>
+            <th>Producto</th>
+            <th>Comentario</th>
+            <th>Puntuación</th>
+            <th>Fecha</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for opinion in opiniones %}
+        <tr>
+            <td>{{ opinion.usuario.nombre }}</td>
+            <td>{{ opinion.producto.nombre }}</td>
+            <td>{{ opinion.comentario }}</td>
+            <td>{{ opinion.puntuacion }} ⭐</td>
+            <td>{{ opinion.fecha_creacion|date:"d M Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -13,23 +13,24 @@ from django.core.mail import send_mail
 from django.utils.crypto import get_random_string
 from django.contrib.messages import get_messages
 from .forms import UsuarioForm, ProductoForm
+from appPrincipal.decorators import admin_required
+from django.db.models import Q
+from django.utils.dateparse import parse_date
 
 # Create your views here.
 
 # Vistas para administracion
-
+@admin_required
 def admin_dashboard(request):
+    print(f"Sesión actual: {request.session.get('usuario_id')}")
     return render(request, 'admin_panel/dashboard.html')
 
+@admin_required
 def admin_usuarios(request):
     usuarios = Usuario.objects.all()
     return render(request, 'admin_panel/usuarios.html', {'usuarios': usuarios})
 
-def admin_productos(request):
-    productos = Producto.objects.all()
-    return render(request, 'admin_panel/productos.html', {'productos': productos})
-
-
+@admin_required
 def editar_usuario(request, usuario_id):
     usuario = get_object_or_404(Usuario, id=usuario_id)
     if request.method == 'POST':
@@ -41,6 +42,49 @@ def editar_usuario(request, usuario_id):
         form = UsuarioForm(instance=usuario)
     return render(request, 'admin_panel/editar_usuario.html', {'form': form})
 
+@admin_required
+def eliminar_usuario(request, usuario_id):
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    usuario.delete()
+    return redirect('admin_usuarios')
+
+@admin_required
+def buscar_usuarios(request):
+    query = request.GET.get('q')
+    usuarios = Usuario.objects.filter(nombre__icontains=query) if query else Usuario.objects.all()
+    return render(request, 'admin_panel/usuarios.html', {'usuarios': usuarios})
+
+
+
+@admin_required
+def admin_productos(request):
+    productos = Producto.objects.all()
+    return render(request, 'admin_panel/productos.html', {'productos': productos})
+
+@admin_required
+def agregar_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_productos')
+    else:
+        form = ProductoForm()
+    return render(request, 'admin_panel/agregar_producto.html', {'form': form})
+
+@admin_required
+def eliminar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    producto.delete()
+    return redirect('admin_productos')
+
+@admin_required
+def buscar_productos(request):
+    query = request.GET.get('q')
+    productos = Producto.objects.filter(nombre__icontains=query) if query else Producto.objects.all()
+    return render(request, 'admin_panel/productos.html', {'productos': productos})
+
+@admin_required
 def editar_producto(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id)
     if request.method == 'POST':
@@ -51,6 +95,52 @@ def editar_producto(request, producto_id):
     else:
         form = ProductoForm(instance=producto)
     return render(request, 'admin_panel/editar_producto.html', {'form': form})
+
+
+
+@admin_required
+def admin_opiniones(request):
+    opiniones = Opinion.objects.select_related('usuario', 'producto').all()
+    return render(request, 'admin_panel/opiniones.html', {'opiniones': opiniones})
+
+
+@admin_required
+def admin_reclamos(request):
+    reclamos = Reclamo.objects.select_related('usuario').all()
+    return render(request, 'admin_panel/reclamos.html', {'reclamos': reclamos})
+
+@admin_required
+def responder_reclamo(request, reclamo_id):
+    reclamo = get_object_or_404(Reclamo, id=reclamo_id)
+    if request.method == 'POST':
+        respuesta = request.POST.get('respuesta')
+        reclamo.respuesta = respuesta
+        reclamo.estado = 'Respondido'
+        reclamo.save()
+        return redirect('admin_reclamos')
+    return render(request, 'admin_panel/responder_reclamo.html', {'reclamo': reclamo})
+
+
+@admin_required
+def admin_ventas(request):
+    query = request.GET.get('q', '')
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+    
+    ventas = Venta.objects.select_related('usuario', 'carrito').all()
+
+    if query:
+        ventas = ventas.filter(
+            Q(usuario__nombre__icontains=query) | Q(id__icontains=query)
+        )
+    
+    if fecha_inicio and fecha_fin:
+        ventas = ventas.filter(
+            fecha__range=[parse_date(fecha_inicio), parse_date(fecha_fin)]
+        )
+
+    return render(request, 'admin_panel/ventas.html', {'ventas': ventas})
+
 
 # Fin vistas para administracion
 
@@ -158,15 +248,20 @@ def login(request):
         if not errors:
             try:
                 usuario = Usuario.objects.get(email=email)
-                if check_password(contraseña, usuario.contraseña):  
+                if check_password(contraseña, usuario.contraseña):
                     request.session['usuario_id'] = usuario.id
-                    return redirect('home')
+                    print(f"Usuario {usuario.id} - Admin: {usuario.es_administrador}")  
+                    if usuario.es_administrador:
+                        return redirect('admin_dashboard') 
+                    else:
+                        return redirect('home') 
                 else:
                     errors['contraseña'] = "Contraseña incorrecta."
             except Usuario.DoesNotExist:
                 errors['email'] = "Correo electrónico no registrado."
 
     return render(request, 'login.html', {'errors': errors})
+
 
 def register(request):
     form = forms.UsuarioCustomForm()

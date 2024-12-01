@@ -103,9 +103,13 @@ class PasswordResetForm(forms.Form):
 class UsuarioForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        fields = ['nombre', 'email', 'telefono', 'direccion', 'region', 'ciudad']
+        fields = ['nombre', 'email', 'rut', 'telefono', 'direccion', 'region', 'ciudad']
 
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'precio', 'stock', 'descripcion', 'categoria', 'genero']
+        fields = [
+            'codigo_de_barra', 'nombre', 'precio', 'stock', 'descripcion', 
+            'imagen_principal', 'imagen_2', 'imagen_3', 'imagen_4', 'imagen_5', 'imagen_6',
+            'categoria', 'genero'
+        ]

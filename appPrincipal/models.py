@@ -10,8 +10,8 @@ class Usuario(models.Model):
     direccion = models.CharField(max_length=120, verbose_name="Dirección")
     region = models.CharField(max_length=100, default='Región no especificada')  
     ciudad = models.CharField(max_length=100, default='Ciudad no especificada')
+    es_administrador = models.BooleanField(default=False)
     
-
     def __str__(self):
         return self.nombre
 

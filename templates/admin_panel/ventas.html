@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas</title>
+</head>
+<body>
+    <h1>Ventas</h1>
+<form method="get">
+    <input type="text" name="q" placeholder="Buscar por usuario o ID..." value="{{ request.GET.q }}">
+    <input type="date" name="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+    <input type="date" name="fecha_fin" value="{{ request.GET.fecha_fin }}">
+    <button type="submit">Filtrar</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Total</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for venta in ventas %}
+        <tr>
+            <td>{{ venta.id }}</td>
+            <td>{{ venta.usuario.nombre }}</td>
+            <td>${{ venta.total }}</td>
+            <td>{{ venta.fecha|date:"d M Y" }}</td>
+            <td>{{ venta.estado }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

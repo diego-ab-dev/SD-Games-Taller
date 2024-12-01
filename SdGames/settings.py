@@ -59,7 +59,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'appPrincipal.middleware.AdminRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'SdGames.urls'
@@ -141,10 +140,6 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# mercado pago
-MERCADO_PAGO_ACCESS_TOKEN = "APP_USR-8127443764484352-112411-fe7281c535809d220c1d8969cdbfc79b-2113819885"
-MERCADO_PAGO_PUBLIC_KEY = "APP_USR-988393a0-619d-4dab-99ea-fdfa6cc75ac1"
-
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'debug',
@@ -153,3 +148,9 @@ MESSAGE_TAGS = {
     messages.WARNING: 'warning',
     messages.ERROR: 'error',
 }
+
+# Configuración de las sesiones
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  
+SESSION_COOKIE_AGE = 3600  
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  
+SESSION_SAVE_EVERY_REQUEST = True 
