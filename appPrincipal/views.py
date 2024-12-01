@@ -16,6 +16,7 @@ from .forms import UsuarioForm, ProductoForm
 from appPrincipal.decorators import admin_required
 from django.db.models import Q
 from django.utils.dateparse import parse_date
+from django.contrib import messages
 
 # Create your views here.
 
@@ -24,6 +25,20 @@ from django.utils.dateparse import parse_date
 def admin_dashboard(request):
     print(f"Sesión actual: {request.session.get('usuario_id')}")
     return render(request, 'admin_panel/dashboard.html')
+
+@admin_required
+def get_dashboard_counts(request):
+    usuarios = Usuario.objects.count()
+    ventas = Venta.objects.count()
+    reclamos = Reclamo.objects.count()
+    opiniones = Opinion.objects.count()
+
+    return JsonResponse({
+        "usuarios": usuarios,
+        "ventas": ventas,
+        "reclamos": reclamos,
+        "opiniones": opiniones,
+    })
 
 @admin_required
 def admin_usuarios(request):
@@ -50,9 +65,68 @@ def eliminar_usuario(request, usuario_id):
 
 @admin_required
 def buscar_usuarios(request):
-    query = request.GET.get('q')
-    usuarios = Usuario.objects.filter(nombre__icontains=query) if query else Usuario.objects.all()
+    query = request.GET.get('q', '')
+    es_administrador = request.GET.get('es_administrador', '')
+    
+    usuarios = Usuario.objects.all()
+    if query:
+        usuarios = usuarios.filter(nombre__icontains=query)
+    if es_administrador:
+        usuarios = usuarios.filter(es_administrador=(es_administrador == "True"))
+    
     return render(request, 'admin_panel/usuarios.html', {'usuarios': usuarios})
+
+@admin_required
+def crear_usuario(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre')
+        email = request.POST.get('email').strip().lower()
+        contraseña = request.POST.get('contraseña')
+        confirmar_contraseña = request.POST.get('confirmar_contraseña')
+        telefono = request.POST.get('telefono')
+        direccion = request.POST.get('direccion')
+        rut = request.POST.get('rut')
+        region = request.POST.get('region')
+        ciudad = request.POST.get('ciudad')
+        es_administrador = request.POST.get('es_administrador') == 'on'
+
+        # Validar contraseñas
+        if contraseña != confirmar_contraseña:
+            return render(request, 'admin_panel/crear_usuario.html', {
+                'error': 'Las contraseñas no coinciden.'
+            })
+
+        try:
+            Usuario.objects.create(
+                nombre=nombre,
+                email=email,
+                contraseña=make_password(contraseña),
+                es_administrador=es_administrador,
+                telefono=telefono,
+                direccion=direccion,
+                rut=rut,
+                region=region,
+                ciudad=ciudad
+            )
+            return redirect('admin_usuarios')
+        except IntegrityError as e:
+            if 'email' in str(e):
+                return render(request, 'admin_panel/crear_usuario.html', {
+                    'error': f'El email ya está registrado.'
+                })
+            elif 'rut' in str(e):
+                return render(request, 'admin_panel/crear_usuario.html', {
+                    'error': f'El RUT ya está registrado.'
+                })
+            else:
+                return render(request, 'admin_panel/crear_usuario.html', {
+                    'error': 'Ocurrió un error al crear el usuario.'
+                })
+
+    return render(request, 'admin_panel/crear_usuario.html')
+
+
+
 
 
 
@@ -127,7 +201,7 @@ def admin_ventas(request):
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
     
-    ventas = Venta.objects.select_related('usuario', 'carrito').all()
+    ventas = Venta.objects.select_related('usuario').prefetch_related('producto_venta__producto').all()
 
     if query:
         ventas = ventas.filter(
@@ -141,6 +215,18 @@ def admin_ventas(request):
 
     return render(request, 'admin_panel/ventas.html', {'ventas': ventas})
 
+
+@admin_required
+def admin_cambiar_estado_venta(request, venta_id):
+    venta = get_object_or_404(Venta, id=venta_id)
+    if request.method == 'POST':
+        nuevo_estado = request.POST.get('estado')
+        if nuevo_estado in dict(Venta.ESTADO_CHOICES):
+            venta.estado = nuevo_estado
+            venta.save()
+        else:
+            messages.error(request, "Estado no válido.")
+    return redirect('admin_ventas')
 
 # Fin vistas para administracion
 
