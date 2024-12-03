@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
 </head>
-<body id="body-pd bg-light">
+<body id="body-pd">
     <h1>Gestión de Usuarios</h1>
     <header class="header" id="header">
         <div class="header_toggle"> <i class='bx bx-menu' id="header-toggle"></i> </div>
@@ -76,6 +76,7 @@
             <tr>
                 <th>Nombre</th>
                 <th>Email</th>
+                <th>Rut</th>
                 <th>Teléfono</th>
                 <th>Dirección</th>
                 <th>Región</th>
@@ -87,6 +88,7 @@
             <tr>
                 <td>{{ usuario.nombre }}</td>
                 <td>{{ usuario.email }}</td>
+                <td>{{ usuario.rut }}</td>
                 <td>{{ usuario.telefono }}</td>
                 <td>{{ usuario.direccion }}</td>
                 <td>{{ usuario.region }}</td>
@@ -94,12 +96,34 @@
                 <td>{{ usuario.es_administrador|yesno:"Sí,No" }}</td>
                 <td>
                     <a href="{% url 'editar_usuario' usuario.id %}">Editar</a> |
-                    <a href="{% url 'eliminar_usuario' usuario.id %}">Eliminar</a>
+                    <a href="{% url 'eliminar_usuario' usuario.id %}" onclick="confirmarEliminacion(event, this)">Eliminar</a>
                 </td>
             </tr>
             {% endfor %}
         </table>
     </div>
+
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalConfirmacionLabel">Confirmación de Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>    
+    
+    
+      
+
     <!--Container Main end-->
 
     <script>
@@ -139,6 +163,27 @@
         linkColor.forEach(l=> l.addEventListener('click', colorLink))
         
             // Your code to run since DOM is loaded and ready
+        });
+
+        let enlaceEliminar;
+
+        function confirmarEliminacion(event, elemento) {
+            // Evita la redirección
+            event.preventDefault();
+
+            // Guarda el enlace en una variable global
+            enlaceEliminar = elemento;
+
+            // Muestra el modal de confirmación
+            const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+            modal.show();
+        }
+
+        // Asocia el botón "Eliminar" del modal al enlace guardado
+        document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
+            if (enlaceEliminar) {
+                window.location.href = enlaceEliminar.href;
+            }
         });
     </script>
 </body>

@@ -21,10 +21,53 @@ from django.contrib import messages
 # Create your views here.
 
 # Vistas para administracion
+regiones_ciudades = {
+    'ARICA Y PARINACOTA': ['Arica', 'Putre'],
+    'TARAPACA': ['Iquique', 'Alto Hospicio'],
+    'ANTOFAGASTA': ['Antofagasta', 'Calama', 'Tocopilla'],
+    'ATACAMA': ['Copiapó', 'Vallenar', 'Chañaral'],
+    'COQUIMBO': ['La Serena', 'Coquimbo', 'Ovalle'],
+    'VALPARAISO': ['Valparaíso', 'Viña del Mar', 'Quillota', 'San Antonio'],
+    'METROPOLITANA': ['Santiago', 'Puente Alto', 'Maipú', 'La Florida'],
+    'OHIGGINS': ['Rancagua', 'San Fernando', 'Pichilemu'],
+    'MAULE': ['Talca', 'Curicó', 'Linares'],
+    'ÑUBLE': ['Chillán', 'San Carlos'],
+    'BIOBIO': ['Concepción', 'Los Ángeles', 'Coronel'],
+    'ARAUCANIA': ['Temuco', 'Villarrica', 'Angol'],
+    'LOS RIOS': ['Valdivia', 'La Unión'],
+    'LOS LAGOS': ['Puerto Montt', 'Osorno', 'Castro'],
+    'AYSEN': ['Coyhaique', 'Puerto Aysén'],
+    'MAGALLANES': ['Punta Arenas', 'Puerto Natales'],
+}
+
 @admin_required
 def admin_dashboard(request):
-    print(f"Sesión actual: {request.session.get('usuario_id')}")
-    return render(request, 'admin_panel/dashboard.html')
+    ultimas_ventas = Venta.objects.prefetch_related('producto_venta__producto').order_by('-fecha')[:4]
+    ventas_info = [
+        {
+            "usuario": venta.usuario.nombre,
+            "productos": [
+                f"{pv.producto.nombre} (x{pv.cantidad})" for pv in venta.producto_venta.all()
+            ],
+            "fecha": venta.fecha,
+        }
+        for venta in ultimas_ventas
+    ]
+    ultimos_reclamos = Reclamo.objects.select_related('usuario').order_by('-fecha')[:4]
+    reclamos_info = [
+        {
+            "usuario": reclamo.usuario.nombre,
+            "asunto": reclamo.asunto,
+            "fecha": reclamo.fecha,
+        }
+        for reclamo in ultimos_reclamos
+    ]
+
+    context = {
+        "ventas_info": ventas_info,
+        "reclamos_info": reclamos_info,
+    }
+    return render(request, 'admin_panel/dashboard.html', context)
 
 @admin_required
 def get_dashboard_counts(request):
@@ -79,6 +122,7 @@ def buscar_usuarios(request):
 @admin_required
 def crear_usuario(request):
     if request.method == 'POST':
+        # Obtener los datos enviados por el formulario
         nombre = request.POST.get('nombre')
         email = request.POST.get('email').strip().lower()
         contraseña = request.POST.get('contraseña')
@@ -93,9 +137,19 @@ def crear_usuario(request):
         # Validar contraseñas
         if contraseña != confirmar_contraseña:
             return render(request, 'admin_panel/crear_usuario.html', {
-                'error': 'Las contraseñas no coinciden.'
+                'error': 'Las contraseñas no coinciden.',
+                'regiones_ciudades_json': json.dumps(regiones_ciudades),
             })
 
+        # Validar ciudad en la región seleccionada
+        ciudades_validas = regiones_ciudades.get(region, [])
+        if ciudad not in ciudades_validas:
+            return render(request, 'admin_panel/crear_usuario.html', {
+                'error': f'La ciudad "{ciudad}" no es válida para la región "{region}".',
+                'regiones_ciudades_json': json.dumps(regiones_ciudades),
+            })
+
+        # Intentar crear el usuario
         try:
             Usuario.objects.create(
                 nombre=nombre,
@@ -110,20 +164,20 @@ def crear_usuario(request):
             )
             return redirect('admin_usuarios')
         except IntegrityError as e:
+            error = 'Ocurrió un error al crear el usuario.'
             if 'email' in str(e):
-                return render(request, 'admin_panel/crear_usuario.html', {
-                    'error': f'El email ya está registrado.'
-                })
+                error = 'El email ya está registrado.'
             elif 'rut' in str(e):
-                return render(request, 'admin_panel/crear_usuario.html', {
-                    'error': f'El RUT ya está registrado.'
-                })
-            else:
-                return render(request, 'admin_panel/crear_usuario.html', {
-                    'error': 'Ocurrió un error al crear el usuario.'
-                })
+                error = 'El RUT ya está registrado.'
+            return render(request, 'admin_panel/crear_usuario.html', {
+                'error': error,
+                'regiones_ciudades_json': json.dumps(regiones_ciudades),
+            })
 
-    return render(request, 'admin_panel/crear_usuario.html')
+    # Si no es POST, renderizar el formulario vacío
+    return render(request, 'admin_panel/crear_usuario.html', {
+    'regiones_ciudades': regiones_ciudades,
+    })
 
 
 

@@ -112,6 +112,61 @@
                 </div>
             </div>
         </section>
+
+
+        <section id="dashboard-cards">
+            <div class="container my-4">
+                <div class="row">
+                    <!-- Últimas Ventas -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">Últimas Ventas</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    {% for venta in ventas_info %}
+                                    <li class="list-group-item">
+                                        <strong>{{ venta.usuario }}</strong>: 
+                                        {{ venta.productos|join:", " }} <br>
+                                        <small class="text-muted">{{ venta.fecha|date:"d/m/Y H:i" }}</small>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="card-footer text-center">
+                                <a href="{% url 'admin_ventas' %}" class="btn btn-outline-primary btn-sm">Ver más</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Últimos Reclamos -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="card-title mb-0">Últimos Reclamos</h5>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-group list-group-flush">
+                                    {% for reclamo in reclamos_info %}
+                                    <li class="list-group-item">
+                                        <strong>{{ reclamo.usuario }}</strong>: 
+                                        {{ reclamo.asunto }} <br>
+                                        <small class="text-muted">{{ reclamo.fecha|date:"d/m/Y H:i" }}</small>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <div class="card-footer text-center">
+                                <a href="{% url 'admin_reclamos' %}" class="btn btn-outline-danger btn-sm">Ver más</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        
     <!--Container Main end-->
 
     <script>

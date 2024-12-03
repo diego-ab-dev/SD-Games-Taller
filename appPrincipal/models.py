@@ -153,7 +153,6 @@ class Venta(models.Model):
         self.total = self.subtotal + self.envio
         self.save()
 
-        # Disminuir el stock de los productos
         for producto_venta in self.producto_venta.all():
             producto = producto_venta.producto
             if producto.stock >= producto_venta.cantidad:
@@ -172,6 +171,9 @@ class ProductoVenta(models.Model):
     @property
     def total_producto(self):
         return self.cantidad * self.precio_unitario
+    
+    def __str__(self):
+        return f"{self.producto.nombre} (Cantidad: {self.cantidad})"
 
 
 class Opinion(models.Model):

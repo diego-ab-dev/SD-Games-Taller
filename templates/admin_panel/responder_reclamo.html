@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,17 +10,21 @@
     integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
     <title>Responder Reclamo</title>
+    <link rel="stylesheet" href="{% static 'styles/styles_admin/styles_responder_reclamo.css' %}">
 </head>
 <body>
-    <h1>Responder Reclamo</h1>
-<form method="post">
-    {% csrf_token %}
-    <p><strong>Asunto:</strong> {{ reclamo.asunto }}</p>
-    <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
-    <textarea name="respuesta" placeholder="Escribe tu respuesta aquí...">{{ reclamo.respuesta }}</textarea>
-    <button type="submit">Enviar Respuesta</button>
-</form>
-<a href="{% url 'admin_reclamos' %}">Volver</a>
-
+    <div class="reclamo-container">
+        <h1>Responder Reclamo</h1>
+        <form method="post">
+            {% csrf_token %}
+            <div class="reclamo-info">
+                <p><strong>Asunto:</strong> {{ reclamo.asunto }}</p>
+                <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
+            </div>
+            <textarea name="respuesta" placeholder="Escribe tu respuesta aquí...">{{ reclamo.respuesta }}</textarea>
+            <button type="submit" class="btn-submit">Enviar Respuesta</button>
+        </form>
+        <a href="{% url 'admin_reclamos' %}" class="btn-back">Volver</a>
+    </div>    
 </body>
 </html>
