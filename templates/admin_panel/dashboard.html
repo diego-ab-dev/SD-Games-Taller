@@ -131,6 +131,8 @@
                                         {{ venta.productos|join:", " }} <br>
                                         <small class="text-muted">{{ venta.fecha|date:"d/m/Y H:i" }}</small>
                                     </li>
+                                    {% empty %}
+                                    <p class="text-center">No hay nuevas ventas por el momento.</p>
                                     {% endfor %}
                                 </ul>
                             </div>
@@ -154,6 +156,8 @@
                                         {{ reclamo.asunto }} <br>
                                         <small class="text-muted">{{ reclamo.fecha|date:"d/m/Y H:i" }}</small>
                                     </li>
+                                    {% empty %}
+                                    <p class="text-center">No hay reclamos por el momento.</p>
                                     {% endfor %}
                                 </ul>
                             </div>
@@ -164,9 +168,33 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="card-title mb-0">Productos con Bajo Stock</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for producto in productos_info %}
+                            <li class="list-group-item">
+                                <strong>{{ producto.nombre }}</strong>: 
+                                {% if producto.stock == 0 %}
+                                    <span class="text-danger">Agotado</span>
+                                {% else %}
+                                    <span class="text-warning">Stock: {{ producto.stock }}</span>
+                                {% endif %}
+                            </li>
+                            {% empty %}
+                            <p class="text-center">No hay productos con bajo stock por el momento.</p>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="{% url 'admin_productos' %}" class="btn btn-outline-warning btn-sm">Ver más</a>
+                    </div>
+                </div>
+            </div>            
         </section>
-        
-        
     <!--Container Main end-->
 
     <script>
@@ -175,7 +203,6 @@
                 const response = await fetch("{% url 'get_dashboard_counts' %}");
                 const data = await response.json();
 
-                // Actualiza los contadores
                 document.getElementById('usuarios-count').innerText = data.usuarios;
                 document.getElementById('ventas-count').innerText = data.ventas;
                 document.getElementById('reclamos-count').innerText = data.reclamos;
@@ -185,9 +212,7 @@
             }
         }
 
-        // Llama a la función cada 5 segundos
-        setInterval(updateCounts, 5000);
-        // Carga inicial
+        setInterval(updateCounts, 2000);
         updateCounts();
 
 
@@ -198,16 +223,11 @@
         bodypd = document.getElementById(bodyId),
         headerpd = document.getElementById(headerId)
         
-        // Validate that all variables exist
         if(toggle && nav && bodypd && headerpd){
         toggle.addEventListener('click', ()=>{
-        // show navbar
         nav.classList.toggle('show')
-        // change icon
         toggle.classList.toggle('bx-x')
-        // add padding to body
         bodypd.classList.toggle('body-pd')
-        // add padding to header
         headerpd.classList.toggle('body-pd')
         })
         }
@@ -215,7 +235,6 @@
         
         showNavbar('header-toggle','nav-bar','body-pd','header')
         
-        /*===== LINK ACTIVE =====*/
         const linkColor = document.querySelectorAll('.nav_link')
         
         function colorLink(){

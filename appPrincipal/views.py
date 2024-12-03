@@ -17,6 +17,7 @@ from appPrincipal.decorators import admin_required
 from django.db.models import Q
 from django.utils.dateparse import parse_date
 from django.contrib import messages
+from .forms import OpinionForm
 
 # Create your views here.
 
@@ -40,6 +41,7 @@ regiones_ciudades = {
     'MAGALLANES': ['Punta Arenas', 'Puerto Natales'],
 }
 
+# dashboard principal administracion
 @admin_required
 def admin_dashboard(request):
     ultimas_ventas = Venta.objects.prefetch_related('producto_venta__producto').order_by('-fecha')[:4]
@@ -62,12 +64,23 @@ def admin_dashboard(request):
         }
         for reclamo in ultimos_reclamos
     ]
+    
+    productos_bajo_stock = Producto.objects.filter(stock__lt=5).order_by('stock')[:4]
+    productos_info = [
+        {
+            "nombre": producto.nombre,
+            "stock": producto.stock,
+        }
+        for producto in productos_bajo_stock
+    ]
 
     context = {
         "ventas_info": ventas_info,
         "reclamos_info": reclamos_info,
+        "productos_info": productos_info,
     }
     return render(request, 'admin_panel/dashboard.html', context)
+
 
 @admin_required
 def get_dashboard_counts(request):
@@ -82,7 +95,9 @@ def get_dashboard_counts(request):
         "reclamos": reclamos,
         "opiniones": opiniones,
     })
+# fin 
 
+# Usuarios en administracion
 @admin_required
 def admin_usuarios(request):
     usuarios = Usuario.objects.all()
@@ -122,7 +137,6 @@ def buscar_usuarios(request):
 @admin_required
 def crear_usuario(request):
     if request.method == 'POST':
-        # Obtener los datos enviados por el formulario
         nombre = request.POST.get('nombre')
         email = request.POST.get('email').strip().lower()
         contraseña = request.POST.get('contraseña')
@@ -134,14 +148,12 @@ def crear_usuario(request):
         ciudad = request.POST.get('ciudad')
         es_administrador = request.POST.get('es_administrador') == 'on'
 
-        # Validar contraseñas
         if contraseña != confirmar_contraseña:
             return render(request, 'admin_panel/crear_usuario.html', {
                 'error': 'Las contraseñas no coinciden.',
                 'regiones_ciudades_json': json.dumps(regiones_ciudades),
             })
 
-        # Validar ciudad en la región seleccionada
         ciudades_validas = regiones_ciudades.get(region, [])
         if ciudad not in ciudades_validas:
             return render(request, 'admin_panel/crear_usuario.html', {
@@ -149,7 +161,6 @@ def crear_usuario(request):
                 'regiones_ciudades_json': json.dumps(regiones_ciudades),
             })
 
-        # Intentar crear el usuario
         try:
             Usuario.objects.create(
                 nombre=nombre,
@@ -173,17 +184,14 @@ def crear_usuario(request):
                 'error': error,
                 'regiones_ciudades_json': json.dumps(regiones_ciudades),
             })
-
-    # Si no es POST, renderizar el formulario vacío
+        
     return render(request, 'admin_panel/crear_usuario.html', {
     'regiones_ciudades': regiones_ciudades,
     })
+# fin
 
 
-
-
-
-
+# Productos en adminstracion
 @admin_required
 def admin_productos(request):
     productos = Producto.objects.all()
@@ -223,15 +231,18 @@ def editar_producto(request, producto_id):
     else:
         form = ProductoForm(instance=producto)
     return render(request, 'admin_panel/editar_producto.html', {'form': form})
+# fin
 
 
-
+# opiniones en administracion
 @admin_required
 def admin_opiniones(request):
     opiniones = Opinion.objects.select_related('usuario', 'producto').all()
     return render(request, 'admin_panel/opiniones.html', {'opiniones': opiniones})
+#fin
 
 
+# reclamos en administracion
 @admin_required
 def admin_reclamos(request):
     reclamos = Reclamo.objects.select_related('usuario').all()
@@ -247,8 +258,10 @@ def responder_reclamo(request, reclamo_id):
         reclamo.save()
         return redirect('admin_reclamos')
     return render(request, 'admin_panel/responder_reclamo.html', {'reclamo': reclamo})
+# fin
 
 
+# ventas en administracion
 @admin_required
 def admin_ventas(request):
     query = request.GET.get('q', '')
@@ -269,7 +282,6 @@ def admin_ventas(request):
 
     return render(request, 'admin_panel/ventas.html', {'ventas': ventas})
 
-
 @admin_required
 def admin_cambiar_estado_venta(request, venta_id):
     venta = get_object_or_404(Venta, id=venta_id)
@@ -281,7 +293,7 @@ def admin_cambiar_estado_venta(request, venta_id):
         else:
             messages.error(request, "Estado no válido.")
     return redirect('admin_ventas')
-
+#fin
 # Fin vistas para administracion
 
 
@@ -509,6 +521,39 @@ def ver_compras(request):
     ).order_by('-fecha')
 
     return render(request, 'ver_compras.html', {'usuario': usuario, 'compras': compras})
+
+def enviar_opinion(request, producto_id):
+    usuario_id = request.session.get('usuario_id')
+    if not usuario_id:
+        return redirect('login') 
+
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    producto = get_object_or_404(Producto, id=producto_id)
+    
+    producto_comprado = ProductoVenta.objects.filter(
+        venta__usuario=usuario,
+        producto=producto
+    ).exists()
+
+    if not producto_comprado:
+        return redirect('ver_compras')  
+
+    if request.method == 'POST':
+        form = OpinionForm(request.POST)
+        if form.is_valid():
+            opinion = form.save(commit=False)
+            opinion.usuario = usuario  
+            opinion.producto = producto
+            opinion.save()
+            return redirect('ver_compras')  
+    else:
+        form = OpinionForm()
+
+    return render(request, 'enviar_opinion.html', {
+        'producto': producto,
+        'form': form,
+    })
+
 
 def crear_reclamo(request, compra_id):
     usuario_id = request.session.get('usuario_id')

@@ -12,19 +12,25 @@
     crossorigin="anonymous"></script>
     <link rel="stylesheet" href="{% static 'styles/styles_enviar_opinion.css' %}">
     <link rel="icon" type="image/png" href="{% static 'images/sdgameslogo.png' %}">
-    <title>Document</title>
+    <title>Enviar Opinión - {{ producto.nombre }}</title>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="mb-4">Agregar Opinión para la Compra #{{ compra.id }}</h2>
-    
-        <form method="post" class="shadow p-4 rounded bg-light">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary mt-3">Enviar Opinión</button>
-        </form>
-    
-        <a href="{% url 'ver_compras' %}" class="btn btn-link mt-3">Volver al Historial</a>
+    <div class="container d-flex justify-content-center align-items-center vh-100">
+        <div class="card shadow-sm p-4 w-100" style="max-width: 500px;">
+            <h1 class="mb-4 text-center text-primary">Tu Opinión sobre "{{ producto.nombre }}"</h1>
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_puntuacion" class="form-label">Puntuación</label>
+                    {{ form.puntuacion }}
+                </div>
+                <div class="mb-3">
+                    <label for="id_comentario" class="form-label">Comentario</label>
+                    {{ form.comentario }}
+                </div>
+                <button type="submit" class="btn btn-primary w-100">Enviar Opinión</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

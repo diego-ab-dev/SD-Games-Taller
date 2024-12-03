@@ -18,7 +18,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
-from appPrincipal.views import home, login, register, productos_menu, producto_detalle, carrito, vista_carrusel, logout, productos_por_categoria, perfil, editar_perfil, obtener_ciudades, cambiar_contraseña,  agregar_al_carrito, eliminar_del_carrito, actualizar_cantidad_carrito, ver_carrito, lista_favoritos, agregar_favorito, eliminar_favorito, password_reset_request, ver_compras, lista_opiniones, crear_reclamo, lista_reclamos, seleccionar_envio, seleccionar_pago, compra_exitosa, admin_dashboard, admin_productos, admin_usuarios, editar_producto, editar_usuario, agregar_producto, buscar_productos, buscar_usuarios, eliminar_producto, eliminar_usuario, admin_opiniones, admin_reclamos, responder_reclamo, admin_ventas, crear_usuario, get_dashboard_counts, admin_cambiar_estado_venta 
+from appPrincipal.views import home, login, register, productos_menu, producto_detalle, carrito, vista_carrusel, logout, productos_por_categoria, perfil, editar_perfil, obtener_ciudades, cambiar_contraseña,  agregar_al_carrito, eliminar_del_carrito, actualizar_cantidad_carrito, ver_carrito, lista_favoritos, agregar_favorito, eliminar_favorito, password_reset_request, ver_compras, lista_opiniones, crear_reclamo, lista_reclamos, seleccionar_envio, seleccionar_pago, compra_exitosa, admin_dashboard, admin_productos, admin_usuarios, editar_producto, editar_usuario, agregar_producto, buscar_productos, buscar_usuarios, eliminar_producto, eliminar_usuario, admin_opiniones, admin_reclamos, responder_reclamo, admin_ventas, crear_usuario, get_dashboard_counts, admin_cambiar_estado_venta, enviar_opinion 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,6 +34,7 @@ urlpatterns = [
     path('logout/', logout, name='logout'),
     path('perfil/', perfil, name='perfil'),
     path('compras/', ver_compras, name='ver_compras'),
+    path('opinion/enviar/<int:producto_id>/', enviar_opinion, name='enviar_opinion'),
     path('perfil/opiniones/',lista_opiniones, name='lista_opiniones'),
     path('crear_reclamo/<int:compra_id>/', crear_reclamo, name='crear_reclamo'),
     path('reclamos/', lista_reclamos, name='lista_reclamos'),
@@ -52,6 +53,7 @@ urlpatterns = [
     path('seleccionar-envio/<int:usuario_id>/', seleccionar_envio, name='seleccionar_envio'),
     path('seleccionar-pago/<int:usuario_id>/', seleccionar_pago, name='seleccionar_pago'),
     path('compra-exitosa/<int:usuario_id>/', compra_exitosa, name='compra_exitosa'),
+    # urls de admin
     path('admin-panel/', admin_dashboard, name='admin_dashboard'),
     path('api/dashboard-counts/', get_dashboard_counts, name='get_dashboard_counts'),
     path('admin-panel/usuarios/', admin_usuarios, name='admin_usuarios'),

@@ -39,7 +39,12 @@
                             <td>
                                 <ul>
                                     {% for producto_venta in compra.producto_venta.all %}
-                                        <li>{{ producto_venta.producto.nombre }} (x{{ producto_venta.cantidad }}) - Subtotal(Sin Envío): ${{ producto_venta.total_producto|formato_chileno }}</li>
+                                        <li>{{ producto_venta.producto.nombre }} (x{{ producto_venta.cantidad }}) - Subtotal(Sin Envío): ${{ producto_venta.total_producto|formato_chileno }}
+                                            <br>
+                                            <a href="{% url 'enviar_opinion' producto_venta.producto.id %}" class="btn btn-sm btn-primary">
+                                                Enviar Opinión
+                                            </a>
+                                        </li>
                                     {% endfor %}
                                 </ul>
                             </td>

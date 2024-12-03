@@ -187,6 +187,7 @@
                 <h6 style="color: #a5a5a55e;">{{ producto.codigo_de_barra }}</h6>
                 <p><strong>Stock:</strong> {{ producto.stock }}</p>
                 <p><strong>Categoría:</strong> {{ producto.categoria }}</p>
+                <p><strong>Género:</strong> {{ producto.genero }}</p>
                 <h5><strong>Cantidad:</strong></h5>
                 <form method="POST" action="{% url 'agregar_al_carrito' producto.id %}">
                     {% csrf_token %}

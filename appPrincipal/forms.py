@@ -1,7 +1,7 @@
 from django import forms
 from django.core import validators
 from django.core.exceptions import ValidationError
-from .models import Usuario, Producto
+from .models import Usuario, Producto, Opinion
 
 
 regiones_ciudades = {
@@ -96,6 +96,16 @@ class PasswordResetForm(forms.Form):
         'class': 'form-control',
         'placeholder': 'Ingresa tu correo electrónico',
     }))
+
+
+class OpinionForm(forms.ModelForm):
+    class Meta:
+        model = Opinion
+        fields = ['puntuacion', 'comentario']
+        widgets = {
+            'puntuacion': forms.Select(choices=[(i, str(i)) for i in range(1, 6)]),
+            'comentario': forms.Textarea(attrs={'rows': 4}),
+        }
 
 
 # administracion
