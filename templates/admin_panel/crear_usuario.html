@@ -51,7 +51,7 @@
             </div>
 
             <div class="form-floating mb-3">
-                <select class="form-select" id="ciudad" name="ciudad" required>
+                <select class="form-select" id="ciudad" name="ciudad" disabled required>
                     <option value="" disabled selected>Seleccione una ciudad</option>
                 </select>
                 <label for="ciudad">Ciudad</label>
@@ -76,11 +76,34 @@
         </form>
     </div>
 
-    <script id="regiones-data" type="application/json">
-        {{ regiones_ciudades|json_script:"regiones_data" }}
-    </script>
     
     <script>
+    const regionSelect = document.getElementById('region');
+    const ciudadSelect = document.getElementById('ciudad');
+    
+    function cargarCiudades(region) {
+        fetch(`/obtener_ciudades/?region=${region}`)
+            .then(response => response.json())
+            .then(data => {
+                ciudadSelect.innerHTML = '<option value="" disabled selected>Seleccione una ciudad</option>';
+                if (data.ciudades && data.ciudades.length > 0) {
+                    ciudadSelect.disabled = false;
+                    data.ciudades.forEach(function (ciudad) {
+                        const option = document.createElement('option');
+                        option.value = ciudad;
+                        option.textContent = ciudad;
+                        ciudadSelect.appendChild(option);
+                    });
+                } else {
+                    ciudadSelect.disabled = true;
+                }
+            })
+            .catch(error => console.log('Error al cargar ciudades:', error));
+    }
+    
+    regionSelect.addEventListener('change', function () {
+        cargarCiudades(this.value);
+    });
         function togglePassword() {
             const passwordField = document.getElementById('password');
             const confirmPasswordField = document.getElementById('confirm_password');
@@ -89,29 +112,8 @@
             confirmPasswordField.type = type;
         }
 
-        const regionesCiudades = JSON.parse(document.getElementById('regiones-data').textContent);
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const regionSelect = document.getElementById('region'); 
-            const ciudadSelect = document.getElementById('ciudad'); 
-
-            regionSelect.addEventListener('change', function () {
-                const regionSeleccionada = this.value;
-                ciudadSelect.innerHTML = '<option value="" selected>Seleccione una ciudad</option>';
-
-                if (regionSeleccionada && regionesCiudades[regionSeleccionada]) {
-                    regionesCiudades[regionSeleccionada].forEach(function (ciudad) {
-                        const option = document.createElement('option');
-                        option.value = ciudad;
-                        option.textContent = ciudad;
-                        ciudadSelect.appendChild(option);
-                    });
-                    ciudadSelect.disabled = false;
-                } else {
-                    ciudadSelect.disabled = true;
-                }
-            });
-        });
+	
 
     </script>
     

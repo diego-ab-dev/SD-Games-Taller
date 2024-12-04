@@ -110,10 +110,20 @@ def editar_usuario(request, usuario_id):
         form = UsuarioForm(request.POST, instance=usuario)
         if form.is_valid():
             form.save()
-            return redirect('admin_usuarios')
+            # Debug para confirmar que los datos se guardaron
+            print("Usuario actualizado:", form.cleaned_data)
+            return redirect('admin_usuarios')  # Redirige después de actualizar
+        else:
+            # Debug para identificar errores de validación
+            print("Errores en el formulario:", form.errors)
     else:
         form = UsuarioForm(instance=usuario)
-    return render(request, 'admin_panel/editar_usuario.html', {'form': form})
+    
+    return render(request, 'admin_panel/editar_usuario.html', {
+        'form': form,
+        'usuario': usuario,
+        'regiones_ciudades': regiones_ciudades,
+    })
 
 @admin_required
 def eliminar_usuario(request, usuario_id):
