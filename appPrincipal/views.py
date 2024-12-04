@@ -110,11 +110,9 @@ def editar_usuario(request, usuario_id):
         form = UsuarioForm(request.POST, instance=usuario)
         if form.is_valid():
             form.save()
-            # Debug para confirmar que los datos se guardaron
             print("Usuario actualizado:", form.cleaned_data)
-            return redirect('admin_usuarios')  # Redirige después de actualizar
+            return redirect('admin_usuarios')  
         else:
-            # Debug para identificar errores de validación
             print("Errores en el formulario:", form.errors)
     else:
         form = UsuarioForm(instance=usuario)

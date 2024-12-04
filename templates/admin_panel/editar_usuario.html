@@ -21,7 +21,7 @@
                 {% csrf_token %}
                 <div class="mb-3">
                     <label for="rut" class="form-label">RUT</label>
-                    <input type="text" class="form-control" id="rut" name="rut"
+                    <input type="text" class="form-control" value="{{ usuario.rut }}" id="rut" name="rut"
                            placeholder="12345678-9" 
                            pattern="\d{1,8}-[0-9Kk]"
                            title="Ingrese un RUT en el formato 12345678-9" 
