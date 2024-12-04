@@ -32,7 +32,7 @@
                     <input type="text" id="nombre" name="nombre" class="form-control" value="{{ usuario.nombre }}">
                 </div>
                 <div class="form-group">
-                    <label for="email" class="form-label">Email:</label>
+                    <label for="email" class="form-label">Email</label>
                     <input type="email" name="email" id="email"  class="form-control" required value="{{ usuario.email}}">
                 </div>
                 <div class="mb-3">
@@ -45,7 +45,7 @@
                 </div>
                 <div class="form-floating mb-3">
                     <select class="form-select" id="region" name="region" required>
-                        <option value="" disabled selected>Seleccione una región</option>
+                        <option value="{{ usuario.region }}" disabled selected>Seleccione una región</option>
                         {% for region in regiones_ciudades.keys %}
                         <option value="{{ region }}">{{ region }}</option>
                         {% endfor %}
@@ -54,7 +54,7 @@
                 </div>
                 <div class="form-floating mb-3">
                     <select class="form-select" id="ciudad" name="ciudad" disabled required>
-                        <option value="" disabled selected>Seleccione una ciudad</option>
+                        <option value="{{ usuario.ciudad }}" disabled selected>Seleccione una ciudad</option>
                     </select>
                     <label for="ciudad">Ciudad</label>
                 </div>
