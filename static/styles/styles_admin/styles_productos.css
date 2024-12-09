@@ -285,3 +285,10 @@ body.modal-open {
     padding-right: 0; 
     overflow: hidden;
 }
+
+.no-results {
+    margin-top: 20px;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+}

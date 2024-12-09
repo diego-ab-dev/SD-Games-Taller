@@ -231,9 +231,55 @@ def eliminar_producto(request, producto_id):
 
 @admin_required
 def buscar_productos(request):
-    query = request.GET.get('q')
-    productos = Producto.objects.filter(nombre__icontains=query) if query else Producto.objects.all()
-    return render(request, 'admin_panel/productos.html', {'productos': productos})
+    query = request.GET.get('q', '').strip()
+    categoria = request.GET.get('categoria', '')
+    genero = request.GET.get('genero', '')
+    ordenar = request.GET.get('ordenar', 'recientes')
+
+    productos = Producto.objects.all()
+
+    if query:
+        productos = productos.filter(
+            Q(nombre__icontains=query) | Q(codigo_de_barra__icontains=query)
+        )
+
+    if categoria:
+        productos = productos.filter(categoria=categoria)
+
+    if genero:
+        productos = productos.filter(genero=genero)
+
+    if ordenar == 'recientes':
+        productos = productos.order_by('-id')
+    elif ordenar == 'antiguos':
+        productos = productos.order_by('id')
+    elif ordenar == 'menor_precio':
+        productos = productos.order_by('precio')
+    elif ordenar == 'mayor_precio':
+        productos = productos.order_by('-precio')
+
+    if not productos.exists():
+        mensaje = "No se encontraron resultados para tu búsqueda."
+    else:
+        mensaje = ""
+
+    categorias = []
+    for grupo in Producto.CATEGORIAS:
+        for categoria in grupo[1]:  
+            categorias.append(categoria)
+    generos = Producto.GENEROS
+
+    return render(request, 'admin_panel/productos.html', {
+        'productos': productos,
+        'mensaje': mensaje,
+        'query': query,
+        'categoria': categoria,
+        'genero': genero,
+        'ordenar': ordenar,
+        'categorias': categorias,
+        'generos': generos,
+    })
+
 
 @admin_required
 def editar_producto(request, producto_id):

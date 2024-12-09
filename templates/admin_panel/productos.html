@@ -62,11 +62,41 @@
     <div class="height-100 bg-light">
         <div class="product-actions">
             <form method="get" action="{% url 'buscar_productos' %}" class="search-form">
-                <input type="text" name="q" placeholder="Buscar productos..." class="search-input" />
+                <input type="text" name="q" value="{{ query }}" placeholder="Buscar productos..." class="search-input" />
+        
+                <select name="categoria">
+                    <option value="">Todas las Categorías</option>
+                    {% for key, value in categorias %}
+                        <option value="{{ key }}" {% if categoria == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+                
+                <select name="genero">
+                    <option value="">Todos los Géneros</option>
+                    {% for key, value in generos %}
+                        <option value="{{ key }}" {% if genero == key %}selected{% endif %}>{{ value }}</option>
+                    {% endfor %}
+                </select>
+                
+        
+                <select name="ordenar">
+                    <option value="recientes" {% if ordenar == 'recientes' %}selected{% endif %}>Recientes</option>
+                    <option value="antiguos" {% if ordenar == 'antiguos' %}selected{% endif %}>Antiguos</option>
+                    <option value="menor_precio" {% if ordenar == 'menor_precio' %}selected{% endif %}>Menor Precio</option>
+                    <option value="mayor_precio" {% if ordenar == 'mayor_precio' %}selected{% endif %}>Mayor Precio</option>
+                </select>
+        
                 <button type="submit" class="btn-search">Buscar</button>
             </form>
             <a href="{% url 'agregar_producto' %}" class="btn-add">Agregar Producto</a>
         </div>
+        
+        {% if mensaje %}
+            <div class="no-results">
+                <p>{{ mensaje }}</p>
+            </div>
+        {% endif %}
+        
 
         <table>
             <thead>
