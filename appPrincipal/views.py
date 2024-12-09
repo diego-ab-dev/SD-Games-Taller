@@ -131,16 +131,23 @@ def eliminar_usuario(request, usuario_id):
 
 @admin_required
 def buscar_usuarios(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()
+    filtro = request.GET.get('filtro', 'nombre') 
     es_administrador = request.GET.get('es_administrador', '')
-    
     usuarios = Usuario.objects.all()
     if query:
-        usuarios = usuarios.filter(nombre__icontains=query)
+        if filtro == "nombre":
+            usuarios = usuarios.filter(nombre__icontains=query)
+        elif filtro == "rut":
+            usuarios = usuarios.filter(rut__icontains=query)
     if es_administrador:
         usuarios = usuarios.filter(es_administrador=(es_administrador == "True"))
-    
-    return render(request, 'admin_panel/usuarios.html', {'usuarios': usuarios})
+    if not usuarios.exists():
+        mensaje = "No se encontraron resultados."
+    else:
+        mensaje = ""
+    return render(request, 'admin_panel/usuarios.html', {'usuarios': usuarios, 'mensaje': mensaje})
+
 
 @admin_required
 def crear_usuario(request):

@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{% static 'styles/styles_admin/styles_usuarios.css' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+    <link rel="icon" type="image/png" href="{% static 'images/logoadmin.png' %}">
 </head>
 <body id="body-pd">
     <h1>Gestión de Usuarios</h1>
@@ -60,6 +61,10 @@
     <div class="height-100 bg-light">
         <form method="get" action="{% url 'buscar_usuarios' %}">
             <input type="text" name="q" placeholder="Buscar usuarios..." />
+            <select name="filtro">
+                <option value="nombre">Nombre</option>
+                <option value="rut">RUT</option>
+            </select>
             <select name="es_administrador">
                 <option value="">Todos</option>
                 <option value="True">Administradores</option>
@@ -68,39 +73,44 @@
             <button type="submit">Buscar</button>
         </form>
         
+        
         <button data-url="{% url 'crear_usuario' %}" onclick="window.location.href=this.dataset.url" style="margin-bottom: 15px;">
             Agregar nuevo usuario
         </button>               
     
-        <table>
-            <tr>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Rut</th>
-                <th>Teléfono</th>
-                <th>Dirección</th>
-                <th>Región</th>
-                <th>Ciudad</th>
-                <th>¿Es Administrador?</th>
-                <th>Acciones</th>
-            </tr>
-            {% for usuario in usuarios %}
-            <tr>
-                <td>{{ usuario.nombre }}</td>
-                <td>{{ usuario.email }}</td>
-                <td>{{ usuario.rut }}</td>
-                <td>{{ usuario.telefono }}</td>
-                <td>{{ usuario.direccion }}</td>
-                <td>{{ usuario.region }}</td>
-                <td>{{ usuario.ciudad }}</td>
-                <td>{{ usuario.es_administrador|yesno:"Sí,No" }}</td>
-                <td>
-                    <a href="{% url 'editar_usuario' usuario.id %}">Editar</a> |
-                    <a href="{% url 'eliminar_usuario' usuario.id %}" onclick="confirmarEliminacion(event, this)">Eliminar</a>
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
+        {% if mensaje %}
+            <p style="color: red; font-weight: bold;">{{ mensaje }}</p>
+        {% else %}
+            <table>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rut</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Región</th>
+                    <th>Ciudad</th>
+                    <th>¿Es Administrador?</th>
+                    <th>Acciones</th>
+                </tr>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario.nombre }}</td>
+                    <td>{{ usuario.email }}</td>
+                    <td>{{ usuario.rut }}</td>
+                    <td>{{ usuario.telefono }}</td>
+                    <td>{{ usuario.direccion }}</td>
+                    <td>{{ usuario.region }}</td>
+                    <td>{{ usuario.ciudad }}</td>
+                    <td>{{ usuario.es_administrador|yesno:"Sí,No" }}</td>
+                    <td>
+                        <a href="{% url 'editar_usuario' usuario.id %}">Editar</a> |
+                        <a href="{% url 'eliminar_usuario' usuario.id %}" onclick="confirmarEliminacion(event, this)" style="color: red;">Eliminar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
     </div>
 
     <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-labelledby="modalConfirmacionLabel" aria-hidden="true">
