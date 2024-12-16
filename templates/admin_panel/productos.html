@@ -62,22 +62,7 @@
     <div class="height-100 bg-light">
         <div class="product-actions">
             <form method="get" action="{% url 'buscar_productos' %}" class="search-form">
-                <input type="text" name="q" value="{{ query }}" placeholder="Buscar productos..." class="search-input" />
-        
-                <select name="categoria">
-                    <option value="">Todas las Categorías</option>
-                    {% for key, value in categorias %}
-                        <option value="{{ key }}" {% if categoria == key %}selected{% endif %}>{{ value }}</option>
-                    {% endfor %}
-                </select>
-                
-                <select name="genero">
-                    <option value="">Todos los Géneros</option>
-                    {% for key, value in generos %}
-                        <option value="{{ key }}" {% if genero == key %}selected{% endif %}>{{ value }}</option>
-                    {% endfor %}
-                </select>
-                
+                <input type="text" name="q" value="{{ query }}" placeholder="Buscar productos..." class="search-input" />            
         
                 <select name="ordenar">
                     <option value="recientes" {% if ordenar == 'recientes' %}selected{% endif %}>Recientes</option>

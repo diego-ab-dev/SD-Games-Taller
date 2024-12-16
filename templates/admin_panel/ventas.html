@@ -69,19 +69,7 @@
             placeholder="Buscar por usuario o ID..." 
             value="{{ request.GET.q }}"
         >
-        <input 
-            type="date" 
-            name="fecha_inicio" 
-            class="form-control" 
-            value="{{ request.GET.fecha_inicio }}"
-        >
-        <input 
-            type="date" 
-            name="fecha_fin" 
-            class="form-control" 
-            value="{{ request.GET.fecha_fin }}"
-        >
-        <button type="submit" class="btn btn-primary">Filtrar</button>
+        <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 
     <div class="table-responsive">

@@ -123,3 +123,22 @@ class ProductoForm(forms.ModelForm):
             'imagen_principal', 'imagen_2', 'imagen_3', 'imagen_4', 'imagen_5', 'imagen_6',
             'categoria', 'genero'
         ]
+
+    def clean_codigo_de_barra(self):
+        codigo_de_barra = self.cleaned_data.get('codigo_de_barra')
+
+        if Producto.objects.filter(codigo_de_barra=codigo_de_barra).exists():
+            raise ValidationError("El código de barra ya está registrado. Por favor, ingrese un código único.")
+        
+        return codigo_de_barra
+
+    def clean(self):
+        cleaned_data = super().clean()
+        imagen_principal = cleaned_data.get("imagen_principal")
+        if not imagen_principal:
+            raise ValidationError("La imagen principal es obligatoria.")
+        for field in ['codigo_de_barra', 'nombre', 'precio', 'stock', 'descripcion', 'categoria', 'genero']:
+            if not cleaned_data.get(field):
+                raise ValidationError(f"El campo {field.replace('_', ' ').capitalize()} es obligatorio.")
+
+        return cleaned_data
