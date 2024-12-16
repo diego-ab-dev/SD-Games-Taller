@@ -22,10 +22,21 @@
                 <p><strong>Asunto:</strong> {{ reclamo.asunto }}</p>
                 <p><strong>Descripción:</strong> {{ reclamo.descripcion }}</p>
             </div>
-            <textarea name="respuesta" placeholder="Escribe tu respuesta aquí...">{{ reclamo.respuesta }}</textarea>
+            <textarea name="respuesta" placeholder="Escribe tu respuesta aquí..." required>{{ reclamo.respuesta|default_if_none:'' }}</textarea>
             <button type="submit" class="btn-submit">Enviar Respuesta</button>
         </form>
         <a href="{% url 'admin_reclamos' %}" class="btn-back">Volver</a>
-    </div>    
+    </div>  
+    
+    
+    <script>
+        document.querySelector('form').addEventListener('submit', function(event) {
+            const respuesta = document.querySelector('textarea[name="respuesta"]').value.trim();
+            if (!respuesta) {
+                alert('La respuesta no puede estar vacía.');
+                event.preventDefault();  
+            }
+        });
+    </script>
 </body>
 </html>

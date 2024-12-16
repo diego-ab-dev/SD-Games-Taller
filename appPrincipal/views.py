@@ -581,7 +581,13 @@ def ver_compras(request):
         'producto_venta__producto'
     ).order_by('-fecha')
 
+    for compra in compras:
+        for producto_venta in compra.producto_venta.all():
+            producto = producto_venta.producto
+            producto_venta.opinion_enviada = producto.opiniones.filter(usuario=usuario).exists()
+
     return render(request, 'ver_compras.html', {'usuario': usuario, 'compras': compras})
+
 
 def enviar_opinion(request, producto_id):
     usuario_id = request.session.get('usuario_id')

@@ -10,7 +10,7 @@ def formato_chileno(valor):
     - Coma para los decimales (si corresponde)
     """
     if not isinstance(valor, (int, float)):
-        return valor  # Devolver el valor original si no es un número
+        return valor  
     return f"{valor:,.0f}".replace(",", ".")
 
 
@@ -22,3 +22,4 @@ def multiply(value, arg):
 @register.filter(name='add_class')
 def add_class(field, css_class):
     return field.as_widget(attrs={"class": css_class})
+
