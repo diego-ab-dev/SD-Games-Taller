@@ -89,10 +89,10 @@ WSGI_APPLICATION = 'SdGames.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME':'sd_games_taller_db',
+        'NAME':'db_sdgames',
         'USER': 'admin',
         'PASSWORD': 'Inacap#29',
-        'HOST': 'sd-games-taller-db.cbqqsk8w0iap.us-east-1.rds.amazonaws.com',
+        'HOST': 'db-sdgames.ctm6g6e0c65e.us-east-1.rds.amazonaws.com',
         'PORT': '3306',
     }
 }
